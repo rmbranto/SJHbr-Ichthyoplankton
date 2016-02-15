@@ -4,6 +4,7 @@
 
 library(XLConnect)
 library(plyr)
+library(shapefiles)
 
 tnames<-data.frame(ScientificName=unique(z$ScientificName),stringsAsFactors=F)
 wb<-loadWorkbook("tnames.xlsx", create = TRUE)
@@ -15,15 +16,17 @@ saveWorkbook(wb)
 ##  cnames, imageURL and imageLink coulmn were added manually
 ##  need to cnvert this WoRMS web services
 
-wb<-loadWorkbook("tnames_matched_with_cnames.xlsx")
+#wb<-loadWorkbook("tnames_matched_with_cnames.xlsx")
+wb<-loadWorkbook("tnames_matched_with_egg_and_larva_images.xlsx")
 tnames_matched<-readWorksheet(wb,sheet=1)
 
 tnames_matched$ScientificName<-sub("\\s+$","",tnames_matched$ScientificName)
 
 z<-merge(
   x=z,
-  y=tnames_matched[,c(1:4,6,9,7,10:26)],
-  by='ScientificName'
+#  y=tnames_matched[,c(1:4,6,9,7,10:26)],
+   y=tnames_matched[,c(1:8,10,13,11,14:30)],
+by='ScientificName'
 )
 
 write.csv(z,file=paste(project,".csv",sep=''))
