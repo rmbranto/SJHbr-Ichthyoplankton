@@ -30,29 +30,34 @@ by='ScientificName'
 
 # determine caption, URL and link based on life stage
 
-zz$caption<-
-  ifelse(zz$lifeStage=='eggs'&!is.na(zz$eggCaption),zz$eggCaption,
-         ifelse(zz$lifeStage=='larvae'&!is.na(zz$larvaCaption),zz$larvaCaption,
-                paste(stri_trans_totitle(zz$lifeStage),'image not available! Click image of Adult to search Google.')))  
+zz$imageCaption<-
+  ifelse(zz$lifeStage=='eggs'&!is.na(zz$eggCaption),
+         paste('Image of Egg found on ',zz$eggCaption,'. Click image for details.',sep=''),
+         ifelse(zz$lifeStage=='larvae'&!is.na(zz$larvaCaption),
+                paste('Image of Larvae found on ',zz$larvaCaption,'. Click image for details.',sep=''),
+                paste(stri_trans_totitle(zz$lifeStage),'image not available. Click image to search Google.')))  
 
-zz$URL<-
+zz$imageURL<-
   ifelse(zz$lifeStage=='eggs'&!is.na(zz$eggURL),zz$eggURL,
          ifelse(zz$lifeStage=='larvae'&!is.na(zz$larvaURL),zz$larvaURL,
                 zz$adultURL))
                   
-zz$link<-
+zz$imageLink<-
   ifelse(zz$lifeStage=='eggs'&!is.na(zz$eggLink),zz$eggLink,
          ifelse(zz$lifeStage=='larvae'&!is.na(zz$larvaLink),zz$larvaLink,
                 paste('http://www.google.com/images?q=',zz$ScientificName,'egg larva'))) 
                   
-zz<-zz[,c(1:4,8:39,49:70)]
+zz<-zz[,c("Locality.Name","Station","Set","latitude","longitude","dateCollected","year","month","season",
+          "Surface.Temp","Bottom.Temp","Surface.Sal","Bottom.Sal","ScientificName","commonName","AphiaID",
+          "lifeStage","size","Order","Family","Genus","Species","isMarine","isBrackish","isFresh","isTerrestrial",
+          "imageCaption","imageURL","imageLink")]  
 
 write.csv(zz,file=paste(project,".csv",sep=''))
 zz<-read.csv(paste(project,'.csv',sep=''),as.is=T)
 Id<-1:dim(zz)[1]
 
 dd<-data.frame(Id=Id,X=zz$longitude,Y=zz$latitude,stringsAsFactors=F)
-ddTable<-data.frame(Id,zz[,c(2,37:38,10,15:17,21:22,25:28,33:36,6,47:49,51,53:56,57:59)],stringsAsFactors=F)
+ddTable<-data.frame(Id,zz,stringsAsFactors=F)
 ddTable$dateCollected<-as.Date(ddTable$dateCollected)
 ddShapefile <- convert.to.shapefile(dd, ddTable, 'Id', 1)
 write.shapefile(ddShapefile, project, arcgis=T)
