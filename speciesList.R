@@ -5,6 +5,7 @@
 library(XLConnect)
 library(plyr)
 library(shapefiles)
+library(stringi)
 
 tnames<-data.frame(ScientificName=unique(z$ScientificName),stringsAsFactors=F)
 wb<-loadWorkbook("tnames.xlsx", create = TRUE)
@@ -16,26 +17,47 @@ saveWorkbook(wb)
 ##  cnames, imageURL and imageLink coulmn were added manually
 ##  need to cnvert this WoRMS web services
 
-#wb<-loadWorkbook("tnames_matched_with_cnames.xlsx")
 wb<-loadWorkbook("tnames_matched_with_egg_and_larva_images.xlsx")
-tnames_matched<-readWorksheet(wb,sheet=1)
+y<-readWorksheet(wb,sheet=1)
 
-tnames_matched$ScientificName<-sub("\\s+$","",tnames_matched$ScientificName)
+y$ScientificName<-sub("\\s+$","",y$ScientificName)
 
-z<-merge(
+zz<-merge(
   x=z,
-#  y=tnames_matched[,c(1:4,6,9,7,10:26)],
-   y=tnames_matched[,c(1:8,10,13,11,14:30)],
+   y=y,
 by='ScientificName'
 )
 
-write.csv(z,file=paste(project,".csv",sep=''))
+# determine caption, URL and link based on life stage
 
-z<-read.csv(paste(project,'.csv',sep=''),as.is=T)
-Id<-1:dim(z)[1]
+zz$imageCaption<-
+  ifelse(zz$lifeStage=='eggs'&!is.na(zz$eggCaption),
+         paste('Image of Egg found on ',zz$eggCaption,'. Click image for details.',sep=''),
+         ifelse(zz$lifeStage=='larvae'&!is.na(zz$larvaCaption),
+                paste('Image of Larvae found on ',zz$larvaCaption,'. Click image for details.',sep=''),
+                paste(stri_trans_totitle(zz$lifeStage),'image not available. Click image to search Google.')))  
 
-dd<-data.frame(Id=Id,X=z$longitude,Y=z$latitude,stringsAsFactors=F)
-ddTable<-data.frame(Id,z,stringsAsFactors=F)
+zz$imageURL<-
+  ifelse(zz$lifeStage=='eggs'&!is.na(zz$eggURL),zz$eggURL,
+         ifelse(zz$lifeStage=='larvae'&!is.na(zz$larvaURL),zz$larvaURL,
+                zz$adultURL))
+                  
+zz$imageLink<-
+  ifelse(zz$lifeStage=='eggs'&!is.na(zz$eggLink),zz$eggLink,
+         ifelse(zz$lifeStage=='larvae'&!is.na(zz$larvaLink),zz$larvaLink,
+                paste('http://www.google.com/images?q=',zz$ScientificName,'egg larva'))) 
+                  
+zz<-zz[,c("Locality.Name","Station","Set","latitude","longitude","dateCollected","year","month","season",
+          "Surface.Temp","Bottom.Temp","Surface.Sal","Bottom.Sal","ScientificName","commonName","AphiaID",
+          "lifeStage","size","Order","observedIndividuals","Family","Genus","Species","isMarine","isBrackish","isFresh","isTerrestrial",
+          "imageCaption","imageURL","imageLink")]  
+
+write.csv(zz,file=paste(project,".csv",sep=''))
+zz<-read.csv(paste(project,'.csv',sep=''),as.is=T)
+Id<-1:dim(zz)[1]
+
+dd<-data.frame(Id=Id,X=zz$longitude,Y=zz$latitude,stringsAsFactors=F)
+ddTable<-data.frame(Id,zz,stringsAsFactors=F)
 ddTable$dateCollected<-as.Date(ddTable$dateCollected)
 ddShapefile <- convert.to.shapefile(dd, ddTable, 'Id', 1)
 write.shapefile(ddShapefile, project, arcgis=T)
