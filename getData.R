@@ -35,7 +35,7 @@ z<-readWorksheet(wb,sheet=1)
 z<-rename(z,c("Date"="dateCollected"))
 z<-rename(z,c("Longitude1"="longitude","Latitude1"="latitude"))
 z<-rename(z,c("Phylum"="phylum","Genus"="genus","Species"="species"))
-#z$observedIndividuals<-floor(abs(rnorm(dim(z)[1]))*100)+1
+z<-rename(z,c("Count"="observedIndividuals"))
 z$ScientificName<-sub("\\s+$","",paste(z$genus,z$species))
 z$nrec<-1
 

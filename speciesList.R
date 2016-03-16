@@ -49,7 +49,7 @@ zz$imageLink<-
                   
 zz<-zz[,c("Locality.Name","Station","Set","latitude","longitude","dateCollected","year","month","season",
           "Surface.Temp","Bottom.Temp","Surface.Sal","Bottom.Sal","ScientificName","commonName","AphiaID",
-          "lifeStage","size","Order","Family","Genus","Species","isMarine","isBrackish","isFresh","isTerrestrial",
+          "lifeStage","size","Order","observedIndividuals","Family","Genus","Species","isMarine","isBrackish","isFresh","isTerrestrial",
           "imageCaption","imageURL","imageLink")]  
 
 write.csv(zz,file=paste(project,".csv",sep=''))
